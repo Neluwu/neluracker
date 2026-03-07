@@ -310,7 +310,7 @@ function AnimeCard({ item, onChange, allAnimeRef, allMangaRef, isOpen, onToggle 
         <span onClick={onToggle} style={{color: open?theme.accentAnime:"#555", fontSize:16, flexShrink:0, cursor:"pointer", padding:"4px 0 4px 8px"}}>{open?"▲":"▼"}</span>
       </div>
 
-      {/* Expanded */}
+      (/* Expanded */)
       {open && (
         <div onClick={e=>e.stopPropagation()} style={{padding:"4px 14px 14px", borderTop:"1px solid #ffffff08"}}>
           <div style={{padding:"10px 0 6px", display:"flex", flexDirection:"column", gap:6}}>
