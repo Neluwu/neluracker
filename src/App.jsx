@@ -717,9 +717,9 @@ function MobileBottomSheet({ item, isAnime, accent, onClose, onUpdate }) {
   const sep = { height: 1, background: "#ffffff08", margin: "14px 0" };
   const numS = { flex: 1, padding: "8px 4px", background: "#ffffff08", border: "1px solid #ffffff15", borderRadius: 10, color: "#e8e8e8", fontSize: 14, fontWeight: 700, fontFamily: "inherit", outline: "none", boxSizing: "border-box", textAlign: "center", minWidth: 0, maxWidth: "45%" };
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 100 }} onClick={onClose}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 100, touchAction: "none" }} onClick={onClose}>
       <div style={{ position: "absolute", inset: 0, background: "#000000aa" }} />
-      <div onClick={e => e.stopPropagation()} style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "#111927", borderRadius: "20px 20px 0 0", boxShadow: "0 -16px 60px #000c", maxHeight: "85vh", overflowY: "auto" }}>
+      <div onClick={e => e.stopPropagation()} style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "#111927", borderRadius: "20px 20px 0 0", boxShadow: "0 -16px 60px #000c", maxHeight: "85vh", overflowY: "auto", overscrollBehavior: "contain", touchAction: "pan-y", WebkitOverflowScrolling: "touch" }}>
         <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 4px" }}><div style={{ width: 36, height: 4, background: "#ffffff20", borderRadius: 2 }} /></div>
         <div style={{ padding: "4px 16px 28px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
@@ -822,6 +822,14 @@ function CardGrid({ rows, tab, updateAnime, updateManga, deleteAnime, deleteMang
   const isMobile = useIsMobile();
   const theme = useTheme();
   const [mobileSheet, setMobileSheet] = useState(null);
+
+  // Lock body scroll when bottom sheet is open
+  useEffect(() => {
+    if (mobileSheet) {
+      document.body.style.overflow = "hidden";
+      return () => { document.body.style.overflow = ""; };
+    }
+  }, [mobileSheet]);
 
   const renderCard = (item) => {
     const isOpen = openId !== null && openId.tab === tab && String(openId.id) === String(item.id);
