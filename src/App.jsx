@@ -723,7 +723,12 @@ function MobileBottomSheet({ item, isAnime, accent, onClose, onUpdate }) {
         <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 4px" }}><div style={{ width: 36, height: 4, background: "#ffffff20", borderRadius: 2 }} /></div>
         <div style={{ padding: "4px 16px 28px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
-            <div style={{ fontSize: 17, fontWeight: 800, color: "#e8e8e8", flex: 1, marginRight: 10 }}>{item.title}</div>
+            <div style={{ flex: 1, marginRight: 10 }}>
+              <input value={item.title||""} onChange={e => upd("title", e.target.value)}
+                style={{ width: "100%", background: "transparent", border: "none", borderBottom: "1px solid #ffffff10", color: "#e8e8e8", fontSize: 17, fontWeight: 800, fontFamily: "inherit", outline: "none", padding: "2px 0 4px", boxSizing: "border-box" }} />
+              <input value={item.subtitle||""} onChange={e => upd("subtitle", e.target.value)} placeholder="Untertitel / Romaji"
+                style={{ width: "100%", background: "transparent", border: "none", borderBottom: "1px solid #ffffff08", color: "#666", fontSize: 12, fontFamily: "inherit", outline: "none", padding: "2px 0 4px", marginTop: 2, boxSizing: "border-box" }} />
+            </div>
             <button onClick={onClose} style={{ background: "#ffffff08", border: "none", borderRadius: "50%", width: 32, height: 32, color: "#555", fontSize: 16, cursor: "pointer", flexShrink: 0 }}>✕</button>
           </div>
           <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 4 }}>
@@ -843,8 +848,9 @@ function CardGrid({ rows, tab, updateAnime, updateManga, deleteAnime, deleteMang
   const acc = isAnimeTab ? theme.accentAnime : theme.accentManga;
   const onChangeForItem = isAnimeTab ? updateAnime : updateManga;
   const onDeleteForItem = isAnimeTab ? deleteAnime : deleteManga;
-  // Keep mobileSheet item in sync with latest data
-  const sheetItem = mobileSheet ? rows.find(x => x.id === mobileSheet.id) || mobileSheet : null;
+  // Use unfiltered data to keep sheet item in sync even after status change
+  const allItems = isAnimeTab ? anime : manga;
+  const sheetItem = mobileSheet ? allItems.find(x => x.id === mobileSheet.id) || mobileSheet : null;
 
   return (
     <>
