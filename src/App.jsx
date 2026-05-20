@@ -625,6 +625,14 @@ function EntryCard({ item, onChange, onDelete, allAnimeRef, allMangaRef, isOpen,
             )}
           </div>
 
+          {/* Cover-Bild URL */}
+          <div style={{ marginTop: 8 }}>
+            <div style={{ fontSize: 11, color: "#666", marginBottom: 4, textTransform: "uppercase", letterSpacing: ".06em" }}>Cover-Bild URL</div>
+            <input value={item.image_url||""} onChange={e => upd("image_url", e.target.value)} onClick={e => e.stopPropagation()}
+              placeholder="https://cdn.myanimelist.net/... oder beliebige Bild-URL"
+              style={{ width: "100%", background: "#ffffff08", border: "1px solid #ffffff15", borderRadius: 8, color: "#aaa", fontSize: 12, padding: "6px 10px", fontFamily: "inherit", outline: "none", boxSizing: "border-box" }} />
+          </div>
+
           {/* Related Works */}
           <RelatedSection item={item} allAnime={allAnimeRef} allManga={allMangaRef} onChange={onChange} accent={acc} />
 
