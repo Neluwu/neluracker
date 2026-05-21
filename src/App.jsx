@@ -1211,6 +1211,116 @@ function ThemePanel({ theme, onChange, onClose }) {
   );
 }
 
+// ─── MAL Sync ─────────────────────────────────────────────────────────────────
+function MalSyncView({ anime, manga, onUpdateAnime, onUpdateManga }) {
+  const theme = useTheme();
+  const [username, setUsername] = useState(() => {
+    try { return localStorage.getItem("matter_mal_username") || ""; } catch { return ""; }
+  });
+  const [syncing, setSyncing] = useState(false);
+  const [result, setResult] = useState(null);
+
+  const syncFromMal = async () => {
+    if (!username.trim()) return;
+    setSyncing(true);
+    setResult(null);
+    try { localStorage.setItem("matter_mal_username", username.trim()); } catch {}
+    const changes = [];
+    const u = encodeURIComponent(username.trim());
+    try {
+      // Only fetch "watching" anime from MAL (status=1)
+      const activeAnime = anime.filter(a => a.status === "Am Schauen" && a.mal_id);
+      const activeManga = manga.filter(m => (m.status === "Am Lesen" || m.status === "Pausiert") && m.mal_id);
+
+      // Fetch watching anime (single page usually enough, max 300)
+      await new Promise(r => setTimeout(r, 400));
+      const resA = await fetch(`https://api.jikan.moe/v4/users/${u}/animelist?status=watching&limit=300`);
+      if (resA.ok) {
+        const malAnime = (await resA.json()).data || [];
+        for (const malEntry of malAnime) {
+          const malId = malEntry.entry?.mal_id;
+          const local = activeAnime.find(a => a.mal_id === malId);
+          if (!local) continue;
+          const malWatched = malEntry.episodes_watched || 0;
+          const malScore = malEntry.score || 0;
+          let updated = false;
+          const patch = { ...local };
+          if (malWatched > local.watched) { patch.watched = malWatched; updated = true; }
+          if (malScore > 0 && malScore !== local.score) { patch.score = malScore; updated = true; }
+          if (updated) { onUpdateAnime(patch); changes.push(`${local.title}: ${local.watched}\u2192${patch.watched} Ep`); }
+        }
+      }
+
+      // Fetch reading manga (single page)
+      await new Promise(r => setTimeout(r, 400));
+      const resM = await fetch(`https://api.jikan.moe/v4/users/${u}/mangalist?status=reading&limit=300`);
+      if (resM.ok) {
+        const malManga = (await resM.json()).data || [];
+        for (const malEntry of malManga) {
+          const malId = malEntry.entry?.mal_id;
+          const local = activeManga.find(m => m.mal_id === malId);
+          if (!local) continue;
+          const malRead = malEntry.chapters_read || 0;
+          const malReadVols = malEntry.volumes_read || 0;
+          const malScore = malEntry.score || 0;
+          let updated = false;
+          const patch = { ...local };
+          if (malRead > local.read) { patch.read = malRead; updated = true; }
+          if (malReadVols > local.readVols) { patch.readVols = malReadVols; updated = true; }
+          if (malScore > 0 && malScore !== local.score) { patch.score = malScore; updated = true; }
+          if (updated) { onUpdateManga(patch); changes.push(`${local.title}: ${local.read}\u2192${patch.read} Kap`); }
+        }
+      }
+
+      setResult({ ok: true, changes, checked: activeAnime.length + activeManga.length });
+    } catch (e) {
+      setResult({ ok: false, error: e.message });
+    }
+    setSyncing(false);
+  };
+
+  return (
+    <div style={{ background: theme.bgCard, borderRadius: 14, padding: 16, marginBottom: 16, border: "1px solid #ffffff08" }}>
+      <div style={{ fontSize: 12, color: "#3498DB", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 10, fontWeight: 700 }}>
+        MAL Fortschritt abgleichen
+      </div>
+      <div style={{ fontSize: 11, color: "#555", marginBottom: 10, lineHeight: 1.5 }}>
+        Vergleicht deinen MAL-Fortschritt mit MATTER. Nur h\u00f6here Werte werden \u00fcbernommen.
+      </div>
+      <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+        <input value={username} onChange={e => setUsername(e.target.value)} placeholder="MAL Benutzername"
+          style={{ flex: 1, padding: "8px 12px", background: "#ffffff08", border: "1px solid #ffffff15", borderRadius: 10,
+            color: "#ccc", fontSize: 13, fontFamily: "inherit", outline: "none", boxSizing: "border-box" }} />
+        <button onClick={syncFromMal} disabled={syncing || !username.trim()}
+          style={{ padding: "8px 16px", border: "none", borderRadius: 10, fontFamily: "inherit",
+            background: syncing ? "#3498DB22" : "#3498DB33", color: syncing ? "#3498DB88" : "#3498DB",
+            fontSize: 12, fontWeight: 700, cursor: syncing ? "default" : "pointer", flexShrink: 0 }}>
+          {syncing ? "Sync\u2026" : "Abgleichen"}
+        </button>
+      </div>
+      {result && (
+        <div style={{ fontSize: 11, lineHeight: 1.5 }}>
+          {result.ok ? (
+            result.changes.length > 0 ? (
+              <>
+                <div style={{ color: "#2ECC71", marginBottom: 4, fontWeight: 700 }}>{result.changes.length} \u00c4nderungen \u00fcbernommen:</div>
+                {result.changes.slice(0, 20).map((ch, i) => (
+                  <div key={i} style={{ color: "#888" }}>{ch}</div>
+                ))}
+                {result.changes.length > 20 && <div style={{ color: "#555" }}>...und {result.changes.length - 20} weitere</div>}
+              </>
+            ) : (
+              <div style={{ color: "#F5A623" }}>Alles aktuell — {result.checked} Eintr\u00e4ge gepr\u00fcft.</div>
+            )
+          ) : (
+            <div style={{ color: "#E74C3C" }}>Fehler: {result.error}</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Bulk Update + Notifications ─────────────────────────────────────────────
 async function searchMalId(kind, title, _retries = 0) {
   await new Promise(r => setTimeout(r, 400));
@@ -2491,6 +2601,8 @@ export default function App() {
                   MAL-Reset
                 </button>
               </div>
+              {/* MAL Sync */}
+              <MalSyncView anime={anime} manga={manga} onUpdateAnime={updateAnime} onUpdateManga={updateManga} />
               <NotificationsView anime={anime} manga={manga} onUpdateAnime={updateAnime} onUpdateManga={updateManga} />
             </>
           ) : (
