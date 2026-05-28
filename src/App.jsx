@@ -390,7 +390,8 @@ function EntryCard({ item, onChange, onDelete, allAnimeRef, allMangaRef, isOpen,
           <a href={malUrl || undefined} target={malUrl ? "_blank" : undefined} rel={malUrl ? "noopener noreferrer" : undefined}
             onClick={e => { if (!malUrl) { e.preventDefault(); onToggle(); } }}
             style={{ width: 64, flexShrink: 0, cursor: "pointer", position: "relative", display: "block", textDecoration: "none" }}>
-            <img src={item.image_url} alt="" loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+            <img src={item.image_url} alt="" loading="lazy" onError={e => e.target.style.display = "none"}
+              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
             <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "30%",
               background: "linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 60%, transparent 100%)",
               pointerEvents: "none" }} />
@@ -675,12 +676,12 @@ function MobileCoverCard({ item, isAnime, accent, onTap, onStep }) {
     <div style={{ borderRadius: 14, overflow: "hidden", background: "#111927", border: "1px solid #ffffff08" }}>
       <div style={{ position: "relative", height: 240, overflow: "hidden", cursor: "pointer" }} onClick={onTap}>
         {item.image_url ? (
-          <img src={item.image_url} alt="" loading="lazy" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-        ) : (
-          <div style={{ position: "absolute", inset: 0, background: `linear-gradient(135deg, ${accent}44 0%, #111927 100%)`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <img src={item.image_url} alt="" loading="lazy" onError={e => { e.target.style.display = "none"; e.target.nextSibling.style.display = "flex"; }}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+        ) : null}
+          <div style={{ position: "absolute", inset: 0, background: `linear-gradient(135deg, ${accent}44 0%, #111927 100%)`, display: item.image_url ? "none" : "flex", alignItems: "center", justifyContent: "center" }}>
             <span style={{ fontSize: 28, opacity: 0.15, fontWeight: 900, color: "#fff" }}>{(item.title||"").substring(0, 3).toUpperCase()}</span>
           </div>
-        )}
         {item.score > 0 && (
           <div style={{ position: "absolute", top: 8, right: 8, width: 32, height: 32, borderRadius: "50%", background: "#000000cc", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <span style={{ fontSize: 14, fontWeight: 900, color: sc }}>{item.score}</span>
